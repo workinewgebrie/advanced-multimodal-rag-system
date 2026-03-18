@@ -1,0 +1,10 @@
+langchain
+chromadb
+sentence-transformers
+streamlit
+pypdf
+rank_bm25
+transformers
+torch
+openai
+nltk
