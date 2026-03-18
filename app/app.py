@@ -3,10 +3,10 @@ import os
 
 from ingestion.loader import load_document
 from ingestion.chunker import semantic_chunking
-from ingestion.embedder import get_text_embeddings
-from ingestion.indexer import index_documents
-from retrieval.retriever import get_retriever
+from ingestion.embedder import get_embedder
+from ingestion.vector_db import create_vector_store
 from chat.rag_chain import build_rag_chain
+from config import TOP_K
 
 st.set_page_config(
     page_title="Advanced Multimodal RAG System",
@@ -34,9 +34,11 @@ if uploaded_file:
     with st.spinner("Ingesting document..."):
         documents = load_document(file_path)
         chunks = semantic_chunking(documents)
-        embeddings = get_text_embeddings()
-        db = index_documents(chunks, embeddings)
-        retriever = get_retriever(db)
+        embedder = get_embedder()
+
+        db = create_vector_store(chunks, embedder)
+        retriever = db.as_retriever(search_kwargs={"k": TOP_K})
+
         st.session_state.chain = build_rag_chain(retriever)
 
     st.success("Document successfully indexed!")

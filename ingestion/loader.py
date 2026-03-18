@@ -1,9 +1,17 @@
-from langchain.document_loaders import PyPDFLoader, TextLoader
+from langchain_community.document_loaders import PyPDFLoader, TextLoader
+from typing import List
 
 def load_document(path: str):
+    """
+    Load PDF or TXT documents using LangChain community loaders.
+    """
     if path.endswith(".pdf"):
-        return PyPDFLoader(path).load()
+        loader = PyPDFLoader(path)
+        return loader.load()
+
     elif path.endswith(".txt"):
-        return TextLoader(path).load()
+        loader = TextLoader(path, encoding="utf-8")
+        return loader.load()
+
     else:
-        raise ValueError("Unsupported file type")
+        raise ValueError("Unsupported file type. Use PDF or TXT.")
