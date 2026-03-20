@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+.venv/
+
+# Environment variables (IMPORTANT)
+.env
+
+# VS Code
+.vscode/
+
+# Streamlit
+.streamlit/
+
+# Vector database
+chroma/
+*.db
