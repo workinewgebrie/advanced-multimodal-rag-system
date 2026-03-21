@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import time
 from typing import List, Sequence, Tuple
 
 import numpy as np
 from langchain_core.documents import Document
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 
-from config import OPENAI_MODEL, TOP_K, TOP_K_IMAGES
+from config import GEMINI_MODEL, GEMINI_API_KEY, OPENAI_API_KEY, OPENAI_MODEL, TOP_K, TOP_K_IMAGES
 from generation.prompt import build_messages
 from ingestion.embedder import clip_encode_texts
 from ingestion.vector_db import query_images_clip
@@ -60,24 +62,42 @@ def run_rag_turn(
     History-aware RAG turn. `chat_history` is prior turns only (exclude current question).
     Returns dict with answer, text_sources, image_sources.
     """
+    retrieval_start = time.perf_counter()
     text_docs, image_docs = retrieve_context(
         question,
         retriever,
         include_images=include_images,
     )
+    retrieval_s = time.perf_counter() - retrieval_start
     context_docs: List[Document] = list(text_docs) + list(image_docs)
 
-    llm = ChatOpenAI(model=OPENAI_MODEL, temperature=0.2)
+    generation_start = time.perf_counter()
+    if GEMINI_API_KEY:
+        llm = ChatGoogleGenerativeAI(
+            model=GEMINI_MODEL,
+            api_key=GEMINI_API_KEY,
+            temperature=0.2,
+        )
+    elif OPENAI_API_KEY:
+        llm = ChatOpenAI(model=OPENAI_MODEL, temperature=0.2)
+    else:
+        raise ValueError("Missing GEMINI_API_KEY and OPENAI_API_KEY; cannot generate answers.")
     messages = build_messages(
         question=question,
         context_docs=context_docs,
         chat_history=chat_history,
     )
     resp = llm.invoke(messages)
+    generation_s = time.perf_counter() - generation_start
     return {
         "answer": resp.content,
         "text_sources": text_docs,
         "image_sources": image_docs,
+        "timing": {
+            "retrieval_s": retrieval_s,
+            "generation_s": generation_s,
+            "total_s": retrieval_s + generation_s,
+        },
     }
 
 

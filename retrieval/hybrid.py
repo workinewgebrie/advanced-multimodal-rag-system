@@ -39,21 +39,34 @@ class RRHybridRetriever(BaseRetriever):
         vec_docs = self.vector_retriever.invoke(query)
         bm_docs = self.bm25_retriever.invoke(query)
         scores: dict[str, float] = {}
-        best: dict[str, Document] = {}
+        best_docs: dict[str, Document] = {}
+        best_meta: dict[str, dict] = {}
         vw = max(0.0, min(1.0, float(self.vector_weight)))
         bw = 1.0 - vw
         for rank, d in enumerate(vec_docs):
             key = _doc_key(d)
             scores[key] = scores.get(key, 0.0) + vw * (1.0 / (self.rrf_k + rank + 1))
-            best.setdefault(key, d)
+            best_docs.setdefault(key, d)
+            meta = best_meta.setdefault(key, dict(d.metadata or {}))
+            # Track best (lowest) dense rank for explainability in UI.
+            dense_rank = rank
+            prev = meta.get("dense_rank")
+            meta["dense_rank"] = dense_rank if prev is None else min(int(prev), dense_rank)
         for rank, d in enumerate(bm_docs):
             key = _doc_key(d)
             scores[key] = scores.get(key, 0.0) + bw * (1.0 / (self.rrf_k + rank + 1))
-            best.setdefault(key, d)
+            best_docs.setdefault(key, d)
+            meta = best_meta.setdefault(key, dict(d.metadata or {}))
+            bm25_rank = rank
+            prev = meta.get("bm25_rank")
+            meta["bm25_rank"] = bm25_rank if prev is None else min(int(prev), bm25_rank)
         ordered = sorted(scores.keys(), key=lambda x: scores[x], reverse=True)
         out: List[Document] = []
         for key in ordered[: self.k]:
-            out.append(best[key])
+            base = best_docs[key]
+            combined_meta = dict(base.metadata or {})
+            combined_meta.update(best_meta.get(key, {}))
+            out.append(Document(page_content=base.page_content, metadata=combined_meta))
         return out
 
 

@@ -9,6 +9,17 @@ A complete Retrieval-Augmented Generation (RAG) system with:
 
 Core flow: **ingest → chunk → embed → store → retrieve → generate**.
 
+## Assignment requirement coverage
+
+| Requirement | Status | Where implemented |
+|---|---|---|
+| Chunking is **not** character-based | ✅ Complete | `ingestion/chunker.py` semantic sentence-boundary chunking by embedding similarity |
+| Ingestion + retrieval pipelines | ✅ Complete | `ingestion/*`, `retrieval/hybrid.py`, `chat/rag_chain.py` |
+| History-aware chat loop | ✅ Complete | `chat/memory.py` + `generation/prompt.py` + chat loop in `app/app.py` |
+| Multimodal support (optional) | ✅ Implemented | CLIP image indexing/retrieval in `ingestion/embedder.py` + `ingestion/vector_db.py` |
+| User interface (optional) | ✅ Implemented | Streamlit UI in `app/app.py` |
+| Creativity / enhancements | ✅ Implemented | Hybrid RRF, source explainability, timing metrics, chunk previews, transcript export, local similar-image generation |
+
 ## What makes this project “complete”
 
 1. **Semantic chunking (not character-based)**
@@ -21,6 +32,8 @@ Core flow: **ingest → chunk → embed → store → retrieve → generate**.
    - Uses CLIP embeddings to retrieve visually related images from a separate Chroma collection.
 5. **Instructor-friendly UI**
    - Streamlit lets you upload files, index them, ask questions, and inspect retrieved sources.
+6. **Creative enhancements**
+   - Retrieval explainability labels (`dense#` / `bm25#`), per-turn timing, chunk previews, image previews, transcript download, and a local “generate similar demo image” tool.
 
 ## Setup
 
@@ -33,9 +46,11 @@ pip install -r requirements.txt
 Create `.env` in the project root (or set environment variables):
 
 ```env
-OPENAI_API_KEY=sk-...
+GEMINI_API_KEY=...
+# Optional fallback:
+# OPENAI_API_KEY=...
 # Optional overrides:
-# OPENAI_MODEL=gpt-4o-mini
+# GEMINI_MODEL=gemini-1.5-pro
 # EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 # CLIP_MODEL=clip-ViT-B-32
 # VECTOR_DB_DIR=vectorstore/chroma
@@ -80,7 +95,7 @@ Then use the same Chroma persist directory when running the UI (defaults to `vec
 
 ## Terminal demo (no LLM calls, great for presentations)
 
-This prints **(1) semantic chunking results** and **(2) top retrieved chunks** using hybrid retrieval—without calling the OpenAI model.
+This prints **(1) semantic chunking results** and **(2) top retrieved chunks** using hybrid retrieval—without calling the chat LLM.
 
 ```powershell
 .\venv\Scripts\python.exe scripts\demo_retrieve.py `
@@ -142,7 +157,7 @@ flowchart LR
   - One chat turn orchestration:
     - retrieve context (text + optional images)
     - build messages with history
-    - call the OpenAI chat model
+    - call the Gemini chat model
 - `app/app.py`
   - Streamlit UI: upload → index → chat → show sources.
 
