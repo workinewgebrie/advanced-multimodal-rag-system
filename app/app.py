@@ -94,7 +94,7 @@ with st.sidebar:
 
     st.caption(f"Vector store: `{VECTOR_DB_DIR}`")
     if not OPENAI_API_KEY:
-        st.sidebar.warning("Set `OPENAI_API_KEY` to enable chat generation.")
+        st.sidebar.warning("Set OPENAI_API_KEY to enable chat generation.")
     else:
         st.sidebar.caption("OpenAI key found; chat generation is enabled.")
 
@@ -189,7 +189,7 @@ for m in st.session_state.messages:
 user_q = st.chat_input("Ask about your materials…")
 if user_q:
     if not OPENAI_API_KEY:
-        st.error("Missing `OPENAI_API_KEY`. Add it to `.env` (or set env var) and restart the app.")
+        st.error("Missing OPENAI_API_KEY. Add it to .env (or set env var) and restart the app.")
         st.stop()
     hist = recent_turns(st.session_state.messages)
     with st.chat_message("user"):
