@@ -29,11 +29,21 @@ OPENAI_API_KEY=sk-...
 
 ## Run the app
 
-From the **repository root**:
+From the **repository root**, use the venv’s Python so `streamlit` resolves correctly:
 
-```bash
-streamlit run app/app.py
+**PowerShell (recommended on Windows):**
+
+```powershell
+.\venv\Scripts\python.exe -m streamlit run app/app.py
 ```
+
+Or double‑click / run:
+
+```powershell
+.\run_app.ps1
+```
+
+**If the venv is activated** (`.\venv\Scripts\Activate.ps1`), then `streamlit run app/app.py` also works.
 
 ## CLI ingest (optional)
 
