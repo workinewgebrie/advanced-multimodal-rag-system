@@ -3,7 +3,7 @@ from pathlib import Path
 
 # Embeddings
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
-CLIP_MODEL = os.getenv("CLIP_MODEL", "sentence-transformers/clip-ViT-B-32")
+CLIP_MODEL = os.getenv("CLIP_MODEL", "clip-ViT-B-32")
 
 # Vector store (single persist root; separate Chroma collections for text vs images)
 VECTOR_DB_DIR = os.getenv("VECTOR_DB_DIR", str(Path("vectorstore") / "chroma"))

@@ -11,7 +11,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
 
-from config import CLIP_MODEL, IMAGE_COLLECTION, TEXT_COLLECTION, VECTOR_DB_DIR
+from config import IMAGE_COLLECTION, TEXT_COLLECTION, VECTOR_DB_DIR
 
 
 def _chroma_kwargs():
@@ -58,10 +58,7 @@ def ingest_image_documents_clip(
         client.delete_collection(IMAGE_COLLECTION)
     except Exception:
         pass
-    col = client.get_or_create_collection(
-        name=IMAGE_COLLECTION,
-        metadata={"hnsw:space": "cosine", "clip_model": CLIP_MODEL},
-    )
+    col = client.get_or_create_collection(name=IMAGE_COLLECTION)
     texts = [d.page_content for d in documents]
     metadatas = []
     for d in documents:

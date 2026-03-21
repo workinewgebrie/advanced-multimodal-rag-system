@@ -5,7 +5,6 @@ from typing import List, Sequence, Tuple
 import numpy as np
 from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI
-from langchain.retrievers import EnsembleRetriever
 
 from config import OPENAI_MODEL, TOP_K, TOP_K_IMAGES
 from generation.prompt import build_messages
@@ -29,7 +28,7 @@ def _dedupe_docs(docs: Sequence[Document], limit: int) -> List[Document]:
 
 def retrieve_context(
     question: str,
-    retriever: EnsembleRetriever,
+    retriever,
     *,
     k_text: int | None = None,
     include_images: bool = True,
@@ -52,14 +51,20 @@ def retrieve_context(
 
 def run_rag_turn(
     question: str,
-    retriever: EnsembleRetriever,
+    retriever,
     chat_history: List[dict],
+    *,
+    include_images: bool = True,
 ) -> dict:
     """
     History-aware RAG turn. `chat_history` is prior turns only (exclude current question).
     Returns dict with answer, text_sources, image_sources.
     """
-    text_docs, image_docs = retrieve_context(question, retriever)
+    text_docs, image_docs = retrieve_context(
+        question,
+        retriever,
+        include_images=include_images,
+    )
     context_docs: List[Document] = list(text_docs) + list(image_docs)
 
     llm = ChatOpenAI(model=OPENAI_MODEL, temperature=0.2)
