@@ -11,6 +11,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from dotenv import load_dotenv
+
+load_dotenv(ROOT / ".env")
+
 from ingestion.chunker import semantic_chunk_documents
 from ingestion.embedder import get_embedder
 from ingestion.loader import load_document

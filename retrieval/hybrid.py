@@ -78,7 +78,3 @@ def build_hybrid_retriever(
         k=k,
         vector_weight=vw,
     )
-
-
-# Re-export type alias for callers
-HybridRetriever = RRHybridRetriever
