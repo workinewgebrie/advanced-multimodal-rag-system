@@ -5,10 +5,9 @@ from typing import List, Sequence, Tuple
 
 import numpy as np
 from langchain_core.documents import Document
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_openai import ChatOpenAI
 
-from config import GEMINI_MODEL, GEMINI_API_KEY, OPENAI_API_KEY, OPENAI_MODEL, TOP_K, TOP_K_IMAGES
+from config import TOP_K, TOP_K_IMAGES
+from generation.provider import get_chat_llm
 from generation.prompt import build_messages
 from ingestion.embedder import clip_encode_texts
 from ingestion.vector_db import query_images_clip
@@ -72,16 +71,7 @@ def run_rag_turn(
     context_docs: List[Document] = list(text_docs) + list(image_docs)
 
     generation_start = time.perf_counter()
-    if GEMINI_API_KEY:
-        llm = ChatGoogleGenerativeAI(
-            model=GEMINI_MODEL,
-            api_key=GEMINI_API_KEY,
-            temperature=0.2,
-        )
-    elif OPENAI_API_KEY:
-        llm = ChatOpenAI(model=OPENAI_MODEL, temperature=0.2)
-    else:
-        raise ValueError("Missing GEMINI_API_KEY and OPENAI_API_KEY; cannot generate answers.")
+    llm, provider = get_chat_llm(temperature=0.2)
     messages = build_messages(
         question=question,
         context_docs=context_docs,
@@ -98,6 +88,7 @@ def run_rag_turn(
             "generation_s": generation_s,
             "total_s": retrieval_s + generation_s,
         },
+        "provider": provider,
     }
 
 

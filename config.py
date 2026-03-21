@@ -33,8 +33,8 @@ MAX_SENTENCES_PER_CHUNK = int(os.getenv("MAX_SENTENCES_PER_CHUNK", "14"))
 
 # Generation
 GEMINI_API_KEY = _clean_key(os.getenv("GEMINI_API_KEY", ""))
-# Default model is Flash for faster demo latency. You can set to e.g. "gemini-1.5-pro".
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+# Default to a broadly available Flash model for low latency.
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
 # Optional fallback generation provider
 OPENAI_API_KEY = _clean_key(os.getenv("OPENAI_API_KEY", ""))

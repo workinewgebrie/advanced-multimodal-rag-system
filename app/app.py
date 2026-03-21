@@ -17,7 +17,7 @@ from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 load_dotenv(_ROOT / ".env")
 
 from chat.memory import recent_turns
-from chat.rag_chain import run_rag_turn
+from chat.rag_chain import retrieve_context, run_rag_turn
 from config import (
     DATA_IMAGES,
     DATA_RAW,
@@ -309,16 +309,41 @@ if user_q:
                     include_images=use_images,
                 )
             except Exception as e:
-                st.error(f"Generation failed: {e}")
-                st.stop()
+                # Graceful fallback for quota/key/provider issues: still show retrieval output.
+                text_docs, image_docs = retrieve_context(
+                    user_q,
+                    st.session_state.retriever,
+                    include_images=use_images,
+                )
+                preview_lines = []
+                for i, d in enumerate(text_docs[:3], 1):
+                    snippet = d.page_content.strip().replace("\n", " ")
+                    if len(snippet) > 220:
+                        snippet = snippet[:220] + "…"
+                    preview_lines.append(f"{i}. {snippet}")
+                fallback_answer = (
+                    "Generation is currently unavailable (likely API quota/key/provider issue). "
+                    "Showing retrieval-only result so you can continue the demo.\n\n"
+                    + ("\n".join(preview_lines) if preview_lines else "No retrieved text chunks.")
+                )
+                out = {
+                    "answer": fallback_answer,
+                    "text_sources": text_docs,
+                    "image_sources": image_docs,
+                    "timing": {},
+                    "provider": "retrieval-only-fallback",
+                }
+                st.warning(f"Generation failed, fallback active: {e}")
 
         st.markdown(out["answer"])
         timing = out.get("timing") or {}
         retrieval_s = timing.get("retrieval_s")
         generation_s = timing.get("generation_s")
+        provider = out.get("provider")
         if retrieval_s is not None and generation_s is not None:
+            provider_txt = f" · provider {provider}" if provider else ""
             st.caption(
-                f"Timing: retrieval {retrieval_s:.2f}s · generation {generation_s:.2f}s"
+                f"Timing: retrieval {retrieval_s:.2f}s · generation {generation_s:.2f}s{provider_txt}"
             )
         st.session_state.messages.append({"role": "user", "content": user_q})
         st.session_state.messages.append({"role": "assistant", "content": out["answer"]})
