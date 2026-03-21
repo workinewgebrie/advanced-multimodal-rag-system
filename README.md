@@ -79,3 +79,13 @@ flowchart LR
 
 - First model download (MiniLM, CLIP) can take a few minutes.
 - Image entries store a **caption** (your default caption or filename) for the LLM; retrieval uses **visual** CLIP similarity.
+
+### Console messages you might see
+
+| Message | Meaning |
+|--------|---------|
+| **Local URL** / **Network URL** | Normal — open the Local URL in your browser. |
+| **Unauthenticated requests to the HF Hub** | Optional: set a [Hugging Face token](https://huggingface.co/settings/tokens) as `HF_TOKEN` in `.env` for higher rate limits. |
+| **BertModel LOAD REPORT … UNEXPECTED (position_ids)** | Harmless note from `sentence-transformers` when loading MiniLM; safe to ignore. |
+| **Symlinks … Windows** | Harmless: Hub cache works without symlinks; set `HF_HUB_DISABLE_SYMLINKS_WARNING=1` in `.env` to hide the warning, or enable Windows Developer Mode if you want symlink-based caching. |
+| **MiniLM loads twice** | Expected on first ingest: the **semantic chunker** and the **vector embedder** both use the same model name (two loads). Later runs use disk cache and are faster. |
