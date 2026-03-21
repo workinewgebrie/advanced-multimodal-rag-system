@@ -6,6 +6,7 @@ not on fixed character counts. Small chunks are merged up to a sentence cap.
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from typing import List, Sequence
 
 import numpy as np
@@ -40,6 +41,12 @@ def _cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(a, b) / denom)
 
 
+@lru_cache(maxsize=1)
+def _chunker_model(model_name: str) -> SentenceTransformer:
+    # Cached so repeated ingests in the UI don't reload the same weights.
+    return SentenceTransformer(model_name)
+
+
 def semantic_chunk_documents(
     documents: Sequence[Document],
     *,
@@ -54,7 +61,7 @@ def semantic_chunk_documents(
     for consistent segmentation geometry.
     """
     model_name = model_name or EMBEDDING_MODEL
-    model = SentenceTransformer(model_name)
+    model = _chunker_model(model_name)
     out: List[Document] = []
     global_idx = 0
 

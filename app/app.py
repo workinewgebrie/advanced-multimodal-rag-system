@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import os
 import uuid
 from pathlib import Path
 
@@ -30,6 +31,8 @@ from ingestion.embedder import clip_encode_image, get_embedder
 from ingestion.loader import image_document, load_document
 from ingestion.vector_db import ingest_image_documents_clip, ingest_text_documents
 from retrieval.hybrid import build_hybrid_retriever
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
 st.set_page_config(
     page_title="Multimodal RAG",
@@ -90,7 +93,10 @@ with st.sidebar:
         st.session_state.messages = []
 
     st.caption(f"Vector store: `{VECTOR_DB_DIR}`")
-    st.caption("Set `OPENAI_API_KEY` for generation.")
+    if not OPENAI_API_KEY:
+        st.sidebar.warning("Set `OPENAI_API_KEY` to enable chat generation.")
+    else:
+        st.sidebar.caption("OpenAI key found; chat generation is enabled.")
 
 # --- Ingestion pipeline ---
 if ingest_btn:
@@ -126,6 +132,9 @@ if ingest_btn:
                 st.sidebar.error("No text could be extracted from the document.")
                 st.stop()
 
+            num_text_chunks = len(chunks)
+            num_images = len(img_files) if img_files else 0
+
             embedder = get_embedder()
             vstore = ingest_text_documents(chunks, embedder)
 
@@ -158,7 +167,15 @@ if ingest_btn:
                     ingest_image_documents_clip(img_docs, np.stack(img_embs, axis=0), img_ids)
 
             st.session_state.indexed = True
+            st.session_state.last_index_summary = {
+                "text_chunks": num_text_chunks,
+                "images_indexed": num_images,
+            }
         st.sidebar.success("Indexing complete.")
+        st.sidebar.caption(
+            f"Indexed: {st.session_state.last_index_summary['text_chunks']} text chunks, "
+            f"{st.session_state.last_index_summary['images_indexed']} images."
+        )
 
 # --- Chat ---
 if not st.session_state.indexed or st.session_state.retriever is None:
@@ -171,6 +188,9 @@ for m in st.session_state.messages:
 
 user_q = st.chat_input("Ask about your materials…")
 if user_q:
+    if not OPENAI_API_KEY:
+        st.error("Missing `OPENAI_API_KEY`. Add it to `.env` (or set env var) and restart the app.")
+        st.stop()
     hist = recent_turns(st.session_state.messages)
     with st.chat_message("user"):
         st.markdown(user_q)
