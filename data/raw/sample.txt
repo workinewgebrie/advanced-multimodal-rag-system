@@ -1,0 +1,3 @@
+The RAG pipeline ingests documents. It splits them into meaningful chunks.
+Semantic chunking uses embeddings to find natural boundaries.
+Retrieval combines dense vectors with keyword search for robustness.
